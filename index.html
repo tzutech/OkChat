@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>OkChat | Chat Global</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a0b2e 0%, #2d1b4e 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+            position: relative;
+        }
+
+        .chat-container {
+            width: 100%;
+            max-width: 600px;
+            height: 90vh;
+            background: #1e1a2f;
+            border-radius: 32px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .chat-header {
+            background: #2a2340;
+            padding: 18px 24px;
+            border-bottom: 1px solid #3d2f5e;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .title-section h1 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #a855f7, #c084fc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .title-section p {
+            font-size: 0.7rem;
+            color: #9b8bb5;
+            margin-top: 2px;
+        }
+
+        .status-badge {
+            background: #2d2643;
+            padding: 6px 12px;
+            border-radius: 40px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #c084fc;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .led {
+            width: 10px;
+            height: 10px;
+            background: #a855f7;
+            border-radius: 50%;
+            animation: pulse 1.8s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.4; transform: scale(0.9);}
+            100% { opacity: 1; transform: scale(1.2);}
+        }
+
+        .room-info {
+            background: #2a2340;
+            padding: 8px 20px;
+            font-size: 0.75rem;
+            color: #c084fc;
+            border-bottom: 1px solid #3d2f5e;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .room-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .change-room-btn, .delete-room-btn {
+            background: #3d2f5e;
+            border: none;
+            color: #c084fc;
+            padding: 4px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .delete-room-btn {
+            background: #5b2a2a;
+            color: #fca5a5;
+        }
+
+        .delete-room-btn:hover:not(:disabled) {
+            background: #7c2d2d;
+        }
+
+        .delete-room-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .messages-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: #1a1628;
+        }
+
+        .message {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+            animation: fadeSlideUp 0.2s ease-out;
+        }
+
+        .message.own {
+            align-self: flex-end;
+        }
+
+        .message.other {
+            align-self: flex-start;
+        }
+
+        .bubble {
+            padding: 10px 14px;
+            border-radius: 22px;
+            font-size: 0.9rem;
+            word-wrap: break-word;
+        }
+
+        .own .bubble {
+            background: linear-gradient(145deg, #7c3aed, #a855f7);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .other .bubble {
+            background: #2d2643;
+            border: 1px solid #4a3a6e;
+            color: #e2d9f5;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-meta {
+            font-size: 0.65rem;
+            margin-top: 5px;
+            color: #9b8bb5;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .own .message-meta {
+            justify-content: flex-end;
+        }
+
+        .mod-tag {
+            background: #7c3aed;
+            color: white;
+            font-size: 0.6rem;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .message-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            font-size: 0.65rem;
+        }
+
+        .report-btn {
+            color: #f87171;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 0.6rem;
+        }
+
+        .report-btn:hover {
+            text-decoration: underline;
+        }
+
+        .input-wrapper {
+            background: #1e1a2f;
+            border-top: 1px solid #3d2f5e;
+            padding: 16px 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        #messageInput {
+            flex: 1;
+            border: 1.5px solid #3d2f5e;
+            border-radius: 40px;
+            padding: 12px 18px;
+            background: #2a2340;
+            color: #f0eaff;
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        #messageInput:focus {
+            border-color: #a855f7;
+        }
+
+        #sendBtn {
+            background: #7c3aed;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .info-footer {
+            font-size: 0.65rem;
+            text-align: center;
+            padding: 6px 10px 12px;
+            color: #7a6a9a;
+            background: #1e1a2f;
+            border-top: 1px solid #3d2f5e;
+        }
+
+        .admin-btn {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: #2a2340;
+            border: 1px solid #7c3aed;
+            color: #c084fc;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 999;
+            transition: 0.2s;
+        }
+
+        .admin-btn:hover {
+            background: #7c3aed;
+            color: white;
+        }
+
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-card {
+            background: #2a2340;
+            max-width: 380px;
+            width: 90%;
+            border-radius: 48px;
+            padding: 32px 24px;
+            text-align: center;
+            border: 1px solid #7c3aed;
+        }
+
+        .modal-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #c084fc, #a855f7);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .modal-card p {
+            color: #b4a5d9;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+        }
+
+        .modal-card input, .modal-card select, .modal-card textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #4a3a6e;
+            border-radius: 60px;
+            background: #1e1a2f;
+            color: #f0eaff;
+            outline: none;
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .modal-card textarea {
+            text-align: left;
+            resize: vertical;
+        }
+
+        .modal-card button {
+            background: #7c3aed;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        .modal-card button.secondary {
+            background: #3d2f5e;
+        }
+
+        .modal-card button.danger {
+            background: #7c2d2d;
+        }
+
+        .error-text {
+            color: #f87171;
+            font-size: 0.75rem;
+            margin-top: 8px;
+        }
+
+        .room-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 12px 0;
+            text-align: left;
+        }
+
+        .room-item {
+            background: #1e1a2f;
+            margin: 6px 0;
+            padding: 10px;
+            border-radius: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            border: 1px solid #3d2f5e;
+        }
+
+        .room-name {
+            font-weight: bold;
+            color: #c084fc;
+            font-size: 0.85rem;
+        }
+
+        .room-lock {
+            font-size: 0.65rem;
+            color: #9b8bb5;
+        }
+
+        .create-room-section {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #3d2f5e;
+        }
+
+        .create-room-section h3 {
+            color: #c084fc;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+
+        .room-creator {
+            font-size: 0.6rem;
+            color: #7a6a9a;
+            margin-top: 2px;
+        }
+
+        .admin-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .admin-item {
+            background: #2a2340;
+            padding: 8px 12px;
+            border-radius: 30px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-name {
+            color: #c084fc;
+            font-size: 0.85rem;
+        }
+
+        .admin-name.blocked {
+            color: #f87171;
+        }
+
+        .admin-btn-small {
+            background: #3d2f5e;
+            border: none;
+            padding: 4px 12px;
+            border-radius: 20px;
+            color: #c084fc;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+
+        .admin-btn-small.danger {
+            background: #7c2d2d;
+            color: #fca5a5;
+        }
+
+        .warning-text {
+            color: #fbbf24;
+            font-size: 0.7rem;
+            text-align: center;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container" id="chatContainer" style="display: none;">
+    <div class="chat-header">
+        <div class="title-section">
+            <h1>✅ OkChat</h1>
+            <p id="subtitleText">chat con salas · límite 2</p>
+        </div>
+        <div class="status-badge">
+            <span class="led"></span>
+            <span id="connectionStatus">conectando...</span>
+        </div>
+    </div>
+    <div class="room-info">
+        <span>📌 Sala: <strong id="currentRoomName">general</strong></span>
+        <div class="room-actions">
+            <button class="change-room-btn" id="changeRoomBtn">🚪 Cambiar</button>
+            <button class="delete-room-btn" id="deleteRoomBtn">🗑️ Borrar sala</button>
+        </div>
+    </div>
+    <div class="messages-area" id="messagesList">
+        <div style="text-align: center; font-size: 0.8rem; color: #7a6a9a; margin-top: 16px;">
+            ✨ Bienvenido a OkChat
+        </div>
+    </div>
+    <div class="input-wrapper">
+        <input type="text" id="messageInput" placeholder="Escribe tu mensaje..." autocomplete="off">
+        <button id="sendBtn">📨 Enviar</button>
+    </div>
+    <div class="info-footer" id="footerInfo">
+        💬 Máximo 2 salas · 5 mensajes/2seg = cooldown · Denuncias
+    </div>
+</div>
+
+<!-- Botón Admin -->
+<div class="admin-btn" id="adminBtn">🔒 Admin</div>
+
+<script type="module">
+    import { connect } from 'https://esm.sh/itty-sockets@0.9.2';
+
+    // ========== CONFIGURACIÓN ==========
+    const ADMIN_KEY = 'e8ed05f9f6f2';
+    const MAX_ROOMS = 2;
+    
+    // ========== COOLDOWN ==========
+    let messageTimestamps = [];
+    const MAX_MESSAGES = 5;
+    const COOLDOWN_SECONDS = 2;
+    
+    function checkSpam() {
+        const now = Date.now();
+        messageTimestamps = messageTimestamps.filter(t => now - t < COOLDOWN_SECONDS * 1000);
+        if (messageTimestamps.length >= MAX_MESSAGES) return true;
+        messageTimestamps.push(now);
+        return false;
+    }
+    
+    // ========== FILTRO DE MALAS PALABRAS ==========
+    function normalizeText(text) {
+        let normalized = text.toLowerCase();
+        const leetMap = {
+            '0': 'o', '1': 'i', '2': 'z', '3': 'e', '4': 'a', '5': 's',
+            '6': 'g', '7': 't', '8': 'b', '9': 'g', '@': 'a', '$': 's',
+            '!': 'i', '+': 't', '|': 'l', '()': 'o', '<3': 'e', '#': 'h'
+        };
+        for (let [leet, letter] of Object.entries(leetMap)) {
+            normalized = normalized.split(leet).join(letter);
+        }
+        normalized = normalized.replace(/(.)\1{2,}/g, '$1$1');
+        normalized = normalized.replace(/[^a-záéíóúñü\s]/g, '');
+        return normalized;
+    }
+    
+    const forbiddenPhrases = [
+        "im gonna crack you", "i'm gonna crack you", "im gonna fuck you", "i'm gonna fuck you",
+        "i will crack you", "i will fuck you", "voy a romperte", "te voy a romper",
+        "te voy a partir", "te voy a matar", "i will kill you", "im gonna kill you"
+    ];
+    
+    const racialSlurs = [
+        "nga", "nger", "niger", "nigga", "nigg", "n1gga", "n1gger", "n1ger",
+        "n!gga", "n!gger", "n!ger", "n i g g a", "n i g g e r", "n i g e r"
+    ];
+    
+    const offensiveWords = [
+        "puta", "puto", "mierda", "coño", "carajo", "verga", "chinga", "cabron", "pendejo",
+        "culo", "concha", "pelotudo", "hijueputa", "gonorrea", "marica", "maricon", "follar",
+        "cojer", "coger", "chupame", "mamada", "pene", "vagina", "tetas", "orgasmo", "masturba",
+        "prostituta", "zorra", "perra", "malparido", "hdp", "ptm", "ctm", "conchetumadre",
+        "weon", "boludo", "idiota", "estupido", "imbecil", "tarado", "tonto", "culiao",
+        "fuck", "shit", "bitch", "asshole", "motherfucker", "cunt", "dick", "pussy",
+        "merda", "caralho", "buceta", "porra", "viado", "otario", "babaca", "cacete",
+        "desgraca", "foda", "arrombado", "merde", "putain", "connard", "salope", "bordel",
+        "encule", "bite", "couilles", "chatte", "niquer", "foutre", "pute", "batard", "chier",
+        "cracker", "chink", "gook", "spic", "kike", "wetback", "beaner", "sand nigger", "raghead", "towelhead"
+    ];
+    
+    function containsBadWords(text) {
+        const normalized = normalizeText(text);
+        for (let phrase of forbiddenPhrases) {
+            if (normalized.includes(phrase.toLowerCase())) return true;
+        }
+        for (let slur of racialSlurs) {
+            if (normalized.includes(slur.toLowerCase())) return true;
+        }
+        for (let word of offensiveWords) {
+            if (normalized.includes(word.toLowerCase())) return true;
+        }
+        return false;
+    }
+    
+    function censorText(text) {
+        let censored = text;
+        for (let phrase of forbiddenPhrases) {
+            const regex = new RegExp(`(${phrase})`, 'gi');
+            if (regex.test(censored)) {
+                censored = censored.replace(regex, '#'.repeat(phrase.length));
+            }
+        }
+        for (let slur of racialSlurs) {
+            const regex = new RegExp(`(${slur})`, 'gi');
+            if (regex.test(censored)) {
+                censored = censored.replace(regex, '#'.repeat(slur.length));
+            }
+        }
+        for (let word of offensiveWords) {
+            const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+            if (regex.test(censored)) {
+                censored = censored.replace(regex, '#'.repeat(word.length));
+            }
+        }
+        return censored;
+    }
+    
+    // ========== TRADUCCIONES ==========
+    const translations = {
+        es: {
+            title: "chat con salas · límite 2",
+            placeholder: "Escribe tu mensaje...",
+            connected: "conectado",
+            disconnected: "desconectado",
+            joinMsg: "se unió al chat",
+            leftMsg: "salió del chat",
+            roomChanged: "Cambiaste a la sala",
+            passwordRequired: "Contraseña requerida",
+            wrongPassword: "Contraseña incorrecta",
+            roomCreated: "Sala creada",
+            joinRoom: "Unirse a sala",
+            createRoom: "Crear nueva sala",
+            roomName: "Nombre de la sala",
+            passwordOptional: "Contraseña (opcional)",
+            create: "Crear",
+            cancel: "Cancelar",
+            publicRoom: "🔓 Pública",
+            privateRoom: "🔒 Con contraseña",
+            enterPassword: "Ingresa la contraseña",
+            spamWarning: "⚠️ Espera un poco antes de escribir otra vez.",
+            blockedByMod: "⛔ Has sido bloqueado por un moderador"
+        },
+        en: {
+            title: "chat rooms · limit 2",
+            placeholder: "Type your message...",
+            connected: "connected",
+            disconnected: "disconnected",
+            joinMsg: "joined the chat",
+            leftMsg: "left the chat",
+            roomChanged: "Changed to room",
+            passwordRequired: "Password required",
+            wrongPassword: "Wrong password",
+            roomCreated: "Room created",
+            joinRoom: "Join room",
+            createRoom: "Create new room",
+            roomName: "Room name",
+            passwordOptional: "Password (optional)",
+            create: "Create",
+            cancel: "Cancel",
+            publicRoom: "🔓 Public",
+            privateRoom: "🔒 Password protected",
+            enterPassword: "Enter password",
+            spamWarning: "⚠️ Please wait a moment before sending again.",
+            blockedByMod: "⛔ You have been blocked by a moderator"
+        },
+        pt: {
+            title: "salas de chat · limite 2",
+            placeholder: "Escreva sua mensagem...",
+            connected: "conectado",
+            disconnected: "desconectado",
+            joinMsg: "entrou no chat",
+            leftMsg: "saiu do chat",
+            roomChanged: "Mudou para sala",
+            passwordRequired: "Senha necessária",
+            wrongPassword: "Senha incorreta",
+            roomCreated: "Sala criada",
+            joinRoom: "Entrar na sala",
+            createRoom: "Criar nova sala",
+            roomName: "Nome da sala",
+            passwordOptional: "Senha (opcional)",
+            create: "Criar",
+            cancel: "Cancelar",
+            publicRoom: "🔓 Pública",
+            privateRoom: "🔒 Com senha",
+            enterPassword: "Digite a senha",
+            spamWarning: "⚠️ Espere um momento antes de enviar novamente.",
+            blockedByMod: "⛔ Você foi bloqueado por um moderador"
+        },
+        fr: {
+            title: "salons de chat · limite 2",
+            placeholder: "Écrivez votre message...",
+            connected: "connecté",
+            disconnected: "déconnecté",
+            joinMsg: "a rejoint le chat",
+            leftMsg: "a quitté le chat",
+            roomChanged: "Salle changée pour",
+            passwordRequired: "Mot de passe requis",
+            wrongPassword: "Mot de passe incorrect",
+            roomCreated: "Salle créée",
+            joinRoom: "Rejoindre la salle",
+            createRoom: "Créer une salle",
+            roomName: "Nom de la salle",
+            passwordOptional: "Mot de passe (optionnel)",
+            create: "Créer",
+            cancel: "Annuler",
+            publicRoom: "🔓 Publique",
+            privateRoom: "🔒 Avec mot de passe",
+            enterPassword: "Entrez le mot de passe",
+            spamWarning: "⚠️ Veuillez patienter avant d'envoyer à nouveau.",
+            blockedByMod: "⛔ Vous avez été bloqué par un modérateur"
+        }
+    };
+    
+    let currentLang = 'es';
+    let t = translations.es;
+    
+    function setLanguage(lang) {
+        currentLang = lang;
+        t = translations[lang];
+        document.getElementById('subtitleText').innerText = t.title;
+        document.getElementById('messageInput').placeholder = t.placeholder;
+    }
+    
+    // ========== SISTEMA DE MODERADORES ==========
+    let moderadores = JSON.parse(localStorage.getItem('okchat_moderadores') || '[]');
+    let blockedUsers = JSON.parse(localStorage.getItem('okchat_blocked_users') || '[]');
+    let reports = JSON.parse(localStorage.getItem('okchat_reports') || '[]');
+    
+    function isUserModerator(userId) {
+        return moderadores.some(m => m.userId === userId);
+    }
+    
+    function isUserBlocked(userId) {
+        return blockedUsers.some(b => b.userId === userId);
+    }
+    
+    function addModerator(userId, userName) {
+        if (!moderadores.some(m => m.userId === userId)) {
+            moderadores.push({ userId, userName, date: new Date().toISOString() });
+            localStorage.setItem('okchat_moderadores', JSON.stringify(moderadores));
+            return true;
+        }
+        return false;
+    }
+    
+    function removeModerator(userId) {
+        moderadores = moderadores.filter(m => m.userId !== userId);
+        localStorage.setItem('okchat_moderadores', JSON.stringify(moderadores));
+    }
+    
+    function blockUser(userId, userName, reason) {
+        if (!blockedUsers.some(b => b.userId === userId)) {
+            blockedUsers.push({ userId, userName, reason, date: new Date().toISOString() });
+            localStorage.setItem('okchat_blocked_users', JSON.stringify(blockedUsers));
+            return true;
+        }
+        return false;
+    }
+    
+    function unblockUser(userId) {
+        blockedUsers = blockedUsers.filter(b => b.userId !== userId);
+        localStorage.setItem('okchat_blocked_users', JSON.stringify(blockedUsers));
+    }
+    
+    function addReport(reportedUser, reportedUserId, reason, reporterName) {
+        reports.push({ reportedUser, reportedUserId, reason, reporterName, date: new Date().toISOString() });
+        localStorage.setItem('okchat_reports', JSON.stringify(reports));
+    }
+    
+    // ========== PANEL DE ADMIN ==========
+    function mostrarPanelAdmin() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        
+        let moderadoresHtml = '<div class="admin-list">';
+        if (moderadores.length === 0) {
+            moderadoresHtml += '<div style="color:#7a6a9a; text-align:center;">No hay moderadores</div>';
+        } else {
+            moderadores.forEach(mod => {
+                moderadoresHtml += `
+                    <div class="admin-item">
+                        <span class="admin-name">👑 ${escapeHtml(mod.userName)}</span>
+                        <button class="admin-btn-small remove-mod" data-userid="${mod.userId}">❌ Quitar MOD</button>
+                    </div>
+                `;
+            });
+        }
+        moderadoresHtml += '</div>';
+        
+        let blockedHtml = '<div class="admin-list">';
+        if (blockedUsers.length === 0) {
+            blockedHtml += '<div style="color:#7a6a9a; text-align:center;">No hay usuarios bloqueados</div>';
+        } else {
+            blockedUsers.forEach(user => {
+                blockedHtml += `
+                    <div class="admin-item">
+                        <span class="admin-name blocked">🚫 ${escapeHtml(user.userName)}</span>
+                        <button class="admin-btn-small unblock" data-userid="${user.userId}">Desbloquear</button>
+                    </div>
+                `;
+            });
+        }
+        blockedHtml += '</div>';
+        
+        let reportsHtml = '<div class="admin-list" style="max-height:150px;">';
+        if (reports.length === 0) {
+            reportsHtml += '<div style="color:#7a6a9a; text-align:center;">No hay denuncias pendientes</div>';
+        } else {
+            reports.forEach((report, idx) => {
+                reportsHtml += `
+                    <div class="admin-item" style="flex-direction:column; align-items:flex-start;">
+                        <div><strong style="color:#f87171;">${escapeHtml(report.reportedUser)}</strong> denunciado por <strong>${escapeHtml(report.reporterName)}</strong></div>
+                        <div style="font-size:0.7rem; color:#9b8bb5;">Motivo: ${escapeHtml(report.reason)}</div>
+                        <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                            <button class="resolve-report" data-index="${idx}" style="background:#22c55e; border:none; padding:4px 12px; border-radius:20px; color:white; font-size:0.7rem;">✅ Resolver</button>
+                            <button class="block-from-report" data-userid="${report.reportedUserId}" data-username="${escapeHtml(report.reportedUser)}" style="background:#7c2d2d; border:none; padding:4px 12px; border-radius:20px; color:white; font-size:0.7rem;">🚫 Bloquear</button>
+                            <button class="make-mod-from-report" data-userid="${report.reportedUserId}" data-username="${escapeHtml(report.reportedUser)}" style="background:#7c3aed; border:none; padding:4px 12px; border-radius:20px; color:white; font-size:0.7rem;">👑 Hacer MOD</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        reportsHtml += '</div>';
+        
+        modal.innerHTML = `
+            <div class="modal-card" style="max-width: 450px; max-height: 80vh; overflow-y: auto;">
+                <h2>👑 Panel de Moderador</h2>
+                
+                <hr style="margin: 16px 0; border-color: #4a3a6e;">
+                <h3 style="color:#c084fc;">👑 Moderadores</h3>
+                ${moderadoresHtml}
+                
+                <hr style="margin: 16px 0; border-color: #4a3a6e;">
+                <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                    <input type="text" id="newModName" placeholder="Nombre para hacer MOD" style="flex:1; text-align:left;">
+                    <button id="addModBtn" style="width: auto; padding: 12px 16px;">👑 Hacer MOD</button>
+                </div>
+                
+                <hr style="margin: 16px 0; border-color: #4a3a6e;">
+                <h3 style="color:#c084fc;">🚫 Usuarios Bloqueados</h3>
+                ${blockedHtml}
+                
+                <hr style="margin: 16px 0; border-color: #4a3a6e;">
+                <h3 style="color:#c084fc;">📋 Denuncias Pendientes</h3>
+                ${reportsHtml}
+                
+                <hr style="margin: 16px 0; border-color: #4a3a6e;">
+                <button id="closeAdminPanel" class="secondary">❌ Cerrar</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        modal.querySelectorAll('.remove-mod').forEach(btn => {
+            btn.onclick = () => {
+                removeModerator(btn.dataset.userid);
+                modal.remove();
+                mostrarPanelAdmin();
+            };
+        });
+        
+        modal.querySelectorAll('.unblock').forEach(btn => {
+            btn.onclick = () => {
+                unblockUser(btn.dataset.userid);
+                modal.remove();
+                mostrarPanelAdmin();
+            };
+        });
+        
+        modal.querySelectorAll('.resolve-report').forEach(btn => {
+            btn.onclick = () => {
+                reports.splice(parseInt(btn.dataset.index), 1);
+                localStorage.setItem('okchat_reports', JSON.stringify(reports));
+                modal.remove();
+                mostrarPanelAdmin();
+            };
+        });
+        
+        modal.querySelectorAll('.block-from-report').forEach(btn => {
+            btn.onclick = () => {
+                blockUser(btn.dataset.userid, btn.dataset.username, 'Denunciado por comunidad');
+                modal.remove();
+                mostrarPanelAdmin();
+            };
+        });
+        
+        modal.querySelectorAll('.make-mod-from-report').forEach(btn => {
+            btn.onclick = () => {
+                addModerator(btn.dataset.userid, btn.dataset.username);
+                modal.remove();
+                mostrarPanelAdmin();
+            };
+        });
+        
+        modal.querySelector('#addModBtn').onclick = () => {
+            const name = modal.querySelector('#newModName').value.trim();
+            if (name) {
+                addModerator('manual_' + Date.now(), name);
+                modal.remove();
+                mostrarPanelAdmin();
+            }
+        };
+        
+        modal.querySelector('#closeAdminPanel').onclick = () => modal.remove();
+    }
+    
+    function mostrarPasswordModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-card">
+                <h2>🔐 Acceso Administrador</h2>
+                <p>Ingresa la clave de administrador</p>
+                <input type="password" id="adminPassword" placeholder="Clave de administrador">
+                <button id="submitPasswordBtn">✅ Verificar</button>
+                <button id="cancelPasswordBtn" class="secondary">❌ Cancelar</button>
+                <div id="passwordError" class="error-text"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const passwordInput = modal.querySelector('#adminPassword');
+        const submitBtn = modal.querySelector('#submitPasswordBtn');
+        const cancelBtn = modal.querySelector('#cancelPasswordBtn');
+        const errorMsg = modal.querySelector('#passwordError');
+        
+        const verificar = () => {
+            const password = passwordInput.value.trim();
+            if (password === ADMIN_KEY) {
+                modal.remove();
+                mostrarPanelAdmin();
+            } else {
+                errorMsg.innerText = 'Clave incorrecta';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        };
+        
+        submitBtn.onclick = verificar;
+        cancelBtn.onclick = () => modal.remove();
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') verificar();
+        });
+        passwordInput.focus();
+    }
+    
+    // ========== ESTADO GLOBAL ==========
+    let currentUser = null;
+    let currentRoom = 'general';
+    let roomPasswords = new Map();
+    let roomCreators = new Map();
+    roomPasswords.set('general', null);
+    roomCreators.set('general', 'system');
+    
+    let socketConnection = null;
+    let isChatReady = false;
+    
+    const chatContainer = document.getElementById('chatContainer');
+    const messagesContainer = document.getElementById('messagesList');
+    const messageInput = document.getElementById('messageInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const statusSpan = document.getElementById('connectionStatus');
+    const currentRoomNameSpan = document.getElementById('currentRoomName');
+    const changeRoomBtn = document.getElementById('changeRoomBtn');
+    const deleteRoomBtn = document.getElementById('deleteRoomBtn');
+    const adminBtn = document.getElementById('adminBtn');
+    
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+    
+    function addSystemMessage(text) {
+        const div = document.createElement('div');
+        div.style.cssText = 'text-align: center; font-size: 0.7rem; color: #a855f7; margin: 8px 0; background: #2a2340; padding: 4px 10px; border-radius: 20px; width: fit-content; max-width: 90%; margin-left: auto; margin-right: auto;';
+        div.innerText = text;
+        messagesContainer.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    
+    function addChatMessage(text, userName, userId, isOwn, isMod = false, messageId = null) {
+        const div = document.createElement('div');
+        div.className = `message ${isOwn ? 'own' : 'other'}`;
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const modTag = isMod ? ' <span class="mod-tag">MOD</span>' : '';
+        const msgId = messageId || Date.now().toString() + Math.random().toString(36).substr(2, 6);
+        div.setAttribute('data-msg-id', msgId);
+        div.setAttribute('data-user-id', userId);
+        div.setAttribute('data-user-name', userName);
+        
+        div.innerHTML = `
+            <div class="bubble">${escapeHtml(text)}</div>
+            <div class="message-meta">
+                <span>${escapeHtml(userName)}${modTag}</span>
+                <span>${time}</span>
+            </div>
+            <div class="message-actions">
+                <button class="report-btn" data-user-id="${userId}" data-user-name="${escapeHtml(userName)}">🚩 Denunciar</button>
+            </div>
+        `;
+        messagesContainer.appendChild(div);
+        
+        const reportBtn = div.querySelector('.report-btn');
+        reportBtn.onclick = () => mostrarReportModal(userId, userName);
+        
+        div.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
+    
+    function mostrarReportModal(reportedUserId, reportedUserName) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `
+            <div class="modal-card">
+                <h2>🚩 Denunciar usuario</h2>
+                <p>Usuario: <strong>${escapeHtml(reportedUserName)}</strong></p>
+                <textarea id="reportReason" rows="3" placeholder="Motivo de la denuncia..."></textarea>
+                <button id="submitReportBtn">✅ Enviar denuncia</button>
+                <button id="cancelReportBtn" class="secondary">❌ Cancelar</button>
+                <div id="reportError" class="error-text"></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        const submitBtn = modal.querySelector('#submitReportBtn');
+        const cancelBtn = modal.querySelector('#cancelReportBtn');
+        const reasonTextarea = modal.querySelector('#reportReason');
+        const errorMsg = modal.querySelector('#reportError');
+        
+        submitBtn.onclick = () => {
+            const reason = reasonTextarea.value.trim();
+            if (!reason) {
+                errorMsg.innerText = 'Por favor ingresa un motivo';
+                return;
+            }
+            addReport(reportedUserName, reportedUserId, reason, currentUser.name);
+            addSystemMessage(`📋 Denuncia enviada contra ${reportedUserName}`);
+            modal.remove();
+        };
+        
+        cancelBtn.onclick = () => modal.remove();
+    }
+    
+    function getRoomCount() {
+        let count = 0;
+        for (let name of roomPasswords.keys()) {
+            if (name !== 'general') count++;
+        }
+        return count;
+    }
+    
+    function canDeleteRoom(roomName) {
+        if (roomName === 'general') return false;
+        const creatorId = roomCreators.get(roomName);
+        return isUserModerator(currentUser.id) || creatorId === currentUser.id;
+    }
+    
+    function deleteRoom(roomName) {
+        if (roomName === 'general') {
+            addSystemMessage('❌ No se puede borrar la sala general');
+            return false;
+        }
+        if (!canDeleteRoom(roomName)) {
+            addSystemMessage('❌ Solo el creador de la sala o un moderador puede borrarla');
+            return false;
+        }
+        if (currentRoom === roomName) changeRoom('general', null);
+        roomPasswords.delete(roomName);
+        roomCreators.delete(roomName);
+        socketConnection.send({ type: 'room_deleted', roomName: roomName, userId: currentUser.id });
+        addSystemMessage(`🗑️ La sala "${roomName}" ha sido eliminada`);
+        return true;
+    }
+    
+    function changeRoom(roomName, password = null) {
+        if (!socketConnection || !isChatReady) return false;
+        const storedPass = roomPasswords.get(roomName);
+        if (storedPass !== undefined && storedPass !== null && storedPass !== password) {
+            addSystemMessage(`🔐 ${t.wrongPassword} para "${roomName}"`);
+            return false;
+        }
+        currentRoom = roomName;
+        currentRoomNameSpan.innerText = roomName;
+        deleteRoomBtn.disabled = !canDeleteRoom(roomName);
+        socketConnection.send({ type: 'room_change', alias: currentUser.name, userId: currentUser.id, isMod: isUserModerator(currentUser.id), newRoom: roomName });
+        addSystemMessage(`📡 ${t.roomChanged}: ${roomName}`);
+        return true;
+    }
+    
+    function createRoom(roomName, password = null) {
+        if (!roomName || roomName.trim() === '') return false;
+        const cleanName = roomName.trim().toLowerCase().replace(/[^a-z0-9_\-]/g, '');
+        if (cleanName === '') return false;
+        if (cleanName === 'general') {
+            addSystemMessage('❌ No puedes crear una sala llamada "general"');
+            return false;
+        }
+        const currentRoomCount = getRoomCount();
+        if (currentRoomCount >= MAX_ROOMS && !roomPasswords.has(cleanName)) {
+            addSystemMessage(`❌ Límite de ${MAX_ROOMS} salas alcanzado. Borra una sala existente antes de crear otra.`);
+            return false;
+        }
+        if (!roomPasswords.has(cleanName)) {
+            roomPasswords.set(cleanName, password || null);
+            roomCreators.set(cleanName, currentUser.id);
+            addSystemMessage(`✅ ${t.roomCreated}: ${cleanName}`);
+            changeRoom(cleanName, password || null);
+            return true;
+        } else {
+            addSystemMessage(`⚠️ La sala "${cleanName}" ya existe`);
+            return false;
+        }
+    }
+    
+    function showRoomModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        let roomsHtml = '<div class="room-list">';
+        for (let [name, pass] of roomPasswords.entries()) {
+            const lockIcon = pass ? '🔒' : '🔓';
+            const passText = pass ? t.privateRoom : t.publicRoom;
+            const creator = roomCreators.get(name);
+            const canDelete = (isUserModerator(currentUser.id) || creator === currentUser.id) && name !== 'general';
+            roomsHtml += `<div class="room-item" data-room="${name}" data-pass="${pass || ''}"><div><span class="room-name">${escapeHtml(name)}</span><div class="room-creator">${canDelete ? '👑 Puedes borrarla' : ''}</div></div><span class="room-lock">${lockIcon} ${passText}</span></div>`;
+        }
+        roomsHtml += '</div>';
+        modal.innerHTML = `<div class="modal-card"><h2>🚪 ${t.joinRoom}</h2>${roomsHtml}<div class="create-room-section"><h3>➕ ${t.createRoom}</h3><input type="text" id="newRoomName" placeholder="${t.roomName}" maxlength="30"><input type="password" id="newRoomPass" placeholder="${t.passwordOptional}"><button id="createBtn">✅ ${t.create}</button></div><button id="closeModal" style="margin-top:16px; background:#4a3a6e;">❌ ${t.cancel}</button></div>`;
+        document.body.appendChild(modal);
+        modal.querySelectorAll('.room-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const room = el.dataset.room;
+                const passNeeded = el.dataset.pass;
+                if (passNeeded && passNeeded !== 'null' && passNeeded !== '') {
+                    const passModal = document.createElement('div');
+                    passModal.className = 'modal-overlay';
+                    passModal.innerHTML = `<div class="modal-card"><h2>🔐 ${t.passwordRequired}</h2><input type="password" id="roomPass" placeholder="${t.enterPassword}"><button id="submitPass">✅ ${t.joinRoom}</button><button id="cancelPass" style="margin-top:8px; background:#4a3a6e;">❌ ${t.cancel}</button></div>`;
+                    document.body.appendChild(passModal);
+                    passModal.querySelector('#submitPass').onclick = () => {
+                        const pwd = passModal.querySelector('#roomPass').value;
+                        if (pwd === passNeeded) { modal.remove(); passModal.remove(); changeRoom(room, pwd); }
+                        else { addSystemMessage(`❌ ${t.wrongPassword}`); passModal.remove(); }
+                    };
+                    passModal.querySelector('#cancelPass').onclick = () => passModal.remove();
+                } else { changeRoom(room, null); modal.remove(); }
+            });
+        });
+        modal.querySelector('#createBtn').onclick = () => {
+            const newName = modal.querySelector('#newRoomName').value.trim();
+            const newPass = modal.querySelector('#newRoomPass').value.trim() || null;
+            if (newName) { createRoom(newName, newPass); modal.remove(); }
+        };
+        modal.querySelector('#closeModal').onclick = () => modal.remove();
+    }
+    
+    function initChat() {
+        const channel = connect('okchat-v33', { as: currentUser.id });
+        socketConnection = channel;
+        channel.on('open', () => {
+            isChatReady = true;
+            statusSpan.innerText = t.connected;
+            statusSpan.style.color = '#c084fc';
+            addSystemMessage(`🟢 ${currentUser.name}${isUserModerator(currentUser.id) ? ' [MODERADOR]' : ''} ${t.joinMsg}`);
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+            deleteRoomBtn.disabled = !canDeleteRoom(currentRoom);
+        });
+        channel.on('message', (payload) => {
+            if (payload && typeof payload === 'object') {
+                if (payload.type === 'chat_msg' && payload.room === currentRoom && payload.userId !== currentUser.id && !isUserBlocked(payload.userId)) {
+                    addChatMessage(payload.text, payload.alias, payload.userId, false, payload.isMod, payload.msgId);
+                }
+                else if (payload.type === 'register_user' && payload.userId !== currentUser.id && payload.room === currentRoom && !isUserBlocked(payload.userId)) {
+                    addSystemMessage(`✨ ${payload.alias}${payload.isMod ? ' [MOD]' : ''} ${t.joinMsg}`);
+                }
+                else if (payload.type === 'user_left' && payload.userId !== currentUser.id && payload.room === currentRoom) {
+                    addSystemMessage(`👋 ${payload.alias} ${t.leftMsg}`);
+                }
+                else if (payload.type === 'room_change' && payload.userId !== currentUser.id && payload.newRoom === currentRoom && !isUserBlocked(payload.userId)) {
+                    addSystemMessage(`✨ ${payload.alias}${payload.isMod ? ' [MOD]' : ''} ${t.joinMsg} a ${payload.newRoom}`);
+                }
+                else if (payload.type === 'room_deleted' && payload.roomName === currentRoom) {
+                    addSystemMessage(`⚠️ La sala "${payload.roomName}" ha sido eliminada. Serás movido a general.`);
+                    changeRoom('general', null);
+                }
+            }
+        });
+        channel.on('close', () => { isChatReady = false; statusSpan.innerText = t.disconnected; statusSpan.style.color = '#f87171'; });
+        channel.on('leave', () => { socketConnection?.send({ type: 'user_left', alias: currentUser.name, userId: currentUser.id, room: currentRoom }); });
+        socketConnection.send({ type: 'register_user', alias: currentUser.name, userId: currentUser.id, isMod: isUserModerator(currentUser.id), room: currentRoom });
+    }
+    
+    function sendMessage() {
+        if (!isChatReady || !socketConnection) { addSystemMessage('⌛ Conectando...'); return; }
+        if (isUserBlocked(currentUser.id)) { addSystemMessage(`⛔ ${t.blockedByMod}`); return; }
+        if (checkSpam()) { addSystemMessage(`⚠️ ${t.spamWarning}`); return; }
+        const raw = messageInput.value.trim();
+        if (!raw) return;
+        if (containsBadWords(raw)) { addSystemMessage('⚠️ Mensaje bloqueado por lenguaje inapropiado'); messageInput.value = ''; return; }
+        const censoredMsg = censorText(escapeHtml(raw));
+        const msgId = Date.now().toString() + Math.random().toString(36).substr(2, 6);
+        socketConnection.send({ type: 'chat_msg', text: censoredMsg, alias: currentUser.name, userId: currentUser.id, isMod: isUserModerator(currentUser.id), room: currentRoom, msgId: msgId });
+        addChatMessage(censoredMsg, currentUser.name, currentUser.id, true, isUserModerator(currentUser.id), msgId);
+        messageInput.value = '';
+        messageInput.focus();
+    }
+    
+    function handleDeleteRoom() {
+        if (canDeleteRoom(currentRoom)) {
+            if (confirm(`¿Seguro que quieres borrar la sala "${currentRoom}"? Esta acción no se puede deshacer.`)) deleteRoom(currentRoom);
+        } else { addSystemMessage('❌ No tienes permiso para borrar esta sala'); }
+    }
+    
+    // Pantalla de bienvenida
+    function showWelcomeModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-card"><h2>✅ OkChat</h2><p>Chat con salas · Crea la sala que quieras</p><input type="text" id="userName" placeholder="Tu nombre" maxlength="24" autocomplete="off"><select id="langSelect"><option value="es">🇪🇸 Español</option><option value="en">🇬🇧 English</option><option value="pt">🇵🇹 Português</option><option value="fr">🇫🇷 Français</option></select><button id="enterBtn">🚀 Entrar al chat</button><div id="errorMsg" class="error-text"></div></div>`;
+        document.body.appendChild(modal);
+        const enterBtn = document.getElementById('enterBtn');
+        const nameInput = document.getElementById('userName');
+        const langSelect = document.getElementById('langSelect');
+        const errorMsg = document.getElementById('errorMsg');
+        enterBtn.onclick = () => {
+            let name = nameInput.value.trim();
+            if (!name) { errorMsg.innerText = 'Por favor ingresa un nombre'; return; }
+            if (name.length < 2) { errorMsg.innerText = 'El nombre debe tener al menos 2 caracteres'; return; }
+            if (containsBadWords(name)) { errorMsg.innerText = 'Nombre no permitido. Elige otro.'; return; }
+            const lang = langSelect.value;
+            setLanguage(lang);
+            const userId = Date.now().toString() + Math.random().toString(36).substr(2, 8);
+            currentUser = { id: userId, name: name };
+            modal.remove();
+            chatContainer.style.display = 'flex';
+            initChat();
+        };
+        nameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') enterBtn.click(); });
+        nameInput.focus();
+    }
+    
+    adminBtn.onclick = () => { mostrarPasswordModal(); };
+    
+    sendBtn.onclick = sendMessage;
+    messageInput.onkeypress = (e) => { if (e.key === 'Enter') sendMessage(); };
+    changeRoomBtn.onclick = showRoomModal;
+    deleteRoomBtn.onclick = handleDeleteRoom;
+    showWelcomeModal();
+</script>
+</body>
+</html>
